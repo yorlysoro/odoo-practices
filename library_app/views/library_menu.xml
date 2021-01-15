@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <!-- Library App Menu -->
-    <menuitem id="menu_library" name="Library" />
+    <menuitem id="library_menu" name="Library" />
     <!-- Action to open the Book list -->
     <act_window id="action_library_book"
         name="Library Books"
@@ -11,7 +11,7 @@
     <!-- Menu item to open the Book list -->
     <menuitem id="menu_library_book"
         name="Books"
-        parent="menu_library"
+        parent="library_menu"
         action="action_library_book"
     />
 </odoo>
