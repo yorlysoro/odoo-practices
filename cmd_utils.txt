@@ -1,0 +1,64 @@
+>>> from odoo.tools import date_utils
+>>> from datetime import datetime
+>>> date_utils.start_of(datetime.now(), 'week')
+datetime.datetime(2018, 10, 29, 0, 0)
+>>> date_utils.end_of(datetime.now(), 'week')
+datetime.datetime(2018, 11, 4, 23, 59, 59, 999999)
+>>> from datetime import date
+>>> date_utils.add(date.today(), months=2)
+datetime.date(2019, 1, 3)
+>>> date_utils.subtract(date.today(), months=2)
+datetime.date(2018, 9, 3)
+
+Writing with object-style value assignment
+>>> root = self.env['res.users'].browse(1)
+>>> print(root.name)
+OdooBot
+>>> root.name = 'Superuser'
+>>> print(root.name)
+Superuser
+
+Recordset Functions
+>>> rs0 = self.env['res.partner'].search([])
+>>> len(rs0) # how many records?
+40
+>>> starts_A = lambda r: r.name.startswith('A')
+>>> rs1 = rs0.filtered(starts_A)
+>>> print(rs1)
+res.partner(41, 14, 35)
+>> rs1.sorted(key=lambda r: r.id, reverse=True)
+res.partner(41, 35, 14)
+>>> rs2 = rs1.filtered('is_company')
+>>> print(rs2)
+res.partner(14,)
+>>> rs2.mapped('name')
+['Azure Interior']
+>>> rs2.mapped(lambda r: (r.id, r.name))
+[(14, 'Azure Interior')]
+
+One way to do this is using the supported set operations:
+rs1 | rs2 is the union set operation and results in a recordset with all elements
+from both recordsets.
+rs1 + rs2 is the addition set operation to concatenate both recordsets into one.
+It may result in a set with duplicate records.
+rs1 & rs2 is the intersection set operation and results in a recordset with only
+the elements present in both recordsets.
+rs1 - rs2 is the difference set operation and results in a recordset with the rs1
+elements not present in rs2 .
+
+We can use these operations to change a recordset by removing or adding elements. Here
+are some examples:
+self.author_ids |= author1 adds the author1 record, if not in the
+recordset
+self.author_ids -= author1 removes the specific record author1 if present
+in the recordset
+self.author_ids = self.author_ids[:-1] removes the last record
+
+Messages Subtypes:
+By default, we have the following three message subtypes available:
+Discussions, with mail.mt_comment XMLID , used for the messages created
+with the Send message link. It is intended to send a notification.
+Activities, with mail.mt_activities XMLID , used for the messages created
+with the Schedule activity link. It is not intended to send a notification.
+Note, with mail.mt_note XMLID , used for the messages created with the Log
+note link. It is not intended to send a notification.
