@@ -62,3 +62,19 @@ Activities, with mail.mt_activities XMLID , used for the messages created
 with the Schedule activity link. It is not intended to send a notification.
 Note, with mail.mt_note XMLID , used for the messages created with the Log
 note link. It is not intended to send a notification.
+
+ERPpeek client
+$ erppeek --server='http://localhost:8069' -d 12-library -u admin
+Usage (some commands):
+models(name)
+# List models matching pattern
+model(name)
+# Return a Model instance
+(...)
+Password for 'admin':
+Logged in as 'admin'
+12-library >>> model('res.users').count()
+3
+12-library >>> rec = model('res.partner').browse(14)
+12-library >>> rec.name
+'Azure Interior'
