@@ -1,8 +1,15 @@
 <odoo>
+    <act_window id="action_other_checkouts_button"
+                name="Open Other Checkouts"
+                res_model="library.checkout"
+                view_mode="tree,form"
+                domain="[('member_id', '=', default_member_id),
+                ('state', 'in', ['open']),
+                ('id', '!=', active_id)]" />
     <act_window id="action_library_checkout"
                 name="Checkouts"
                 res_model="library.checkout"
-                view_mode="tree,form" />
+                view_mode="kanban,tree,form,search,calendar,pivot,graph" />
     <menuitem id="menu_library_checkout"
                 name="Checkout"
                 action="action_library_checkout"

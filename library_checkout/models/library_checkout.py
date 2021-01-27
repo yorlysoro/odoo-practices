@@ -47,6 +47,35 @@ class Checkout(models.Model):
 
     checkout_date = fields.Date()
     closed_date = fields.Date()
+    member_image = fields.Binary(related='member_id.partner_id.image')
+    num_other_checkouts = fields.Integer(
+        compute='_compute_num_other_checkouts')
+    num_books = fields.Integer(compute='_compute_num_books',
+                                store=True)
+    color = fields.Integer('Color Index')
+    priority = fields.Selection([('0', 'Low'),
+                                ('1', 'Normal'),
+                                ('2', 'High')],
+                                'Priority',
+                                default='1')
+    kanban_state = fields.Selection([('normal', 'In Progress'),
+                                    ('blocked', 'Blocked'),
+                                    ('done', 'Ready for next stage')],
+                                    'Kanban State',
+                                    default='normal')
+    
+    @api.depends('line_ids')
+    def _compute_num_books(self):
+        for book in self:
+            book.num_books = len(book.line_ids)
+
+    def _compute_num_other_checkouts(self):
+        for rec in self:
+            domain = [
+                ('member_id', '=', checkout.rec.id),
+                ('state', 'in', ['open']),
+                ('id', '!=', rec.id)]
+            rec.num_other_checkouts = self.search_count(domain)
 
     @api.onchange('member_id')
     def onchange_member_id(self):
@@ -87,6 +116,15 @@ class Checkout(models.Model):
                 vals['close_date'] = fields.Date.today()
         super().write(vals)
         # Code after write: can use `self`, with the updated values
+        return True
+
+    def button_done(self):
+        Stage = self.env['library.checkout.stage']
+        done_stage = Stage.search(
+            [('state', '=', 'done')],
+            limit=1)
+        for checkout in self:
+            checkout.stage_id = done_stage
         return True
 
 
