@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<odoo>
+    <record id="view_form_book" model="ir.ui.view">
+        <field name="name">Book Form</field>
+        <field name="model">library.book</field>
+        <field name="arch" type="xml">
+            <field name="card_number" position="after">
+                <field name="user_id" />
+            </field>
+        </field>
+    </record>
+</odoo>
