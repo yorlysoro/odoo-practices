@@ -1,4 +1,4 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, exceptions
 from odoo.addons import decimal_precision as dp
 from odoo.exceptions import ValidationError
 from datetime import timedelta
@@ -74,6 +74,9 @@ class LibraryBook(models.Model):
     ref_doc_id = fields.Reference(
                     selection='_referencable_models',
                     string='Reference Document')
+    manager_remarks = fields.Text('Manager Remarks')
+    isbn = fields.Char('ISBN')
+    old_edition = fields.Many2one('library.book', string='Old Edition')
 
     _sql_constraints = [
         ('name_uniq',
@@ -86,10 +89,11 @@ class LibraryBook(models.Model):
 
     def name_get(self):
         result = []
-        for record in self:
-            rec_name = "%s (%s)" % (record.name, record.date_release)
-            result.append((record.id, rec_name))
-        return result
+        for book in self:
+            authors = book.author_ids.mapped('name')
+            name = '%s (%s)' % (book.name, ', '.join(authors))
+            result.append((book.id, name))
+            return result
 
     @api.constrains('date_release')
     def _check_release_date(self):
@@ -162,6 +166,86 @@ class LibraryBook(models.Model):
     @api.model
     def make_lost(self):
         self.change_state('lost')
+ 
+    @api.model
+    def get_all_library_members(self):
+        library_member_model = self.env['library.member']
+        return library_member_model.search([])
+    
+    @api.multi
+    def change_update_date(self):
+        self.ensure_one()
+        self.ensure_one()
+        self.update({
+            'date_updated': fields.Datetime.now(),
+        })
+
+    def find_book(self):
+        domain = [
+            '|',
+            '&', ('name', 'ilike', 'Book Name'),
+            ('category_id.name', 'ilike', 'Category Name'),
+            '&', ('name', 'ilike', 'Book Name 2'),
+            ('category_id.name', 'ilike', 'Category Name 2')
+        ]
+        books = self.search(domain)
+
+    @api.model
+    def sort_books_by_date(self, books):
+        return books.sorted(key='release_date')
+
+    def make_borrowed(self):
+        day_to_borrow = self.category_id.max_borrow_days or 10
+        self.date_return = fields.Date.today() + \
+            timedelta(days=day_to_borrow)
+        return super(LibraryBook, self).make_borrowed()
+    
+    def make_available(self):
+        self.date_return = False
+        return super(LibraryBook, self).make_available()
+    
+    @api.model
+    def create(self, values):
+        if not self.user_has_groups('my_library.acl_book_librarian'):
+            if 'manager_remarks' in values:
+                raise UserError(
+                    'You are not allowed to modify '
+                    'manager_remarks'
+                )
+        return super(LibraryBook, self).create(values)
+
+    @api.multi
+    def write(self, values):
+        if not self.user_has_groups('my_library.acl_book_librarian'):
+            if 'manager_remarks' in values:
+                raise UserError(
+                    'You are not allowed to modify '
+                    'manager_remarks'
+                )
+        return super(LibraryBook, self).write(values)
+    
+    @api.model
+    def _name_search(self, name='', args=None, operator='ilike',
+                     limit=100, name_get_uid=None):
+        args = [] if args is None else args.copy()
+        if not(name == '' and operator == 'ilike'):
+            args += ['|', '|',
+                ('name', operator, name),
+                ('isbn', operator, name),
+                ('author_ids.name', operator, name)
+            ]
+        return super(LibraryBook, self)._name_search(
+            name=name, args=args, operator=operator,
+            limit=limit, name_get_uid=name_get_uid)
+    
+    @api.model
+    def _get_average_cost(self):
+        grouped_result = self.read_group(
+            [('cost_price', "!=", False)],  # Domain
+            ['category_id', 'cost_price:avg'],  # Fields to access
+            ['category_id']  # group_by
+        )
+        return grouped_result
 
 
 class ResPartner(models.Model):
@@ -192,3 +276,9 @@ class LibraryMember(models.Model):
     date_end = fields.Date('Termination Date')
     member_number = fields.Char()
     date_of_birth = fields.Date('Date of birth')
+
+
+class LibraryBook(models.Model):
+    _inherit = 'library.book'
+    date_return = fields.Date('Date to return')
+    

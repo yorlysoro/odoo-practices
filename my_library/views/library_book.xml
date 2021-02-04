@@ -23,6 +23,8 @@
                     type="object"/>
                 <button name="make_lost" string="Make Lost"
                     type="object"/>
+                <button name="change_update_date" string="Update Date" 
+                    type="object"/>
                 <group>
                     <group>
                         <field name="name"/>
@@ -44,8 +46,10 @@
                      <field name="cost_price"/>
                      <field name="retail_price"/>
                      <field name="currency_id"/>
+                     <field name="manager_remarks"/>
                 </group>
                 <group>
+                    <field name="old_edition" />
                     <field name="description"/>
                 </group>
             </form>
