@@ -1,0 +1,19 @@
+<<odoo>
+    <data>
+        <record id="base.main_company" model="res.company">
+            <field name="name">Packt publishing</field>
+        </record>
+        <record id="book_cookbook" model="library.book">
+            <field name="publisher_id" ref="base.main_partner" />
+        </record>
+        <record id="res_partner_packt" model="res.partner">
+            <field name="name">Packt Publishing</field>
+            <field name="city">Birmingham</field>
+            <field name="country_id" ref="base.uk" />
+        </record>
+        <function model="library.book" name="_update_book_price"/>
+        <function model="library.book"
+            name="update_book_price"
+            eval="(ref('category_xml_id'), 20)"/>
+    </data>
+</odoo>

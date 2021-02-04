@@ -246,6 +246,18 @@ class LibraryBook(models.Model):
             ['category_id']  # group_by
         )
         return grouped_result
+    
+    @api.model
+    def _update_book_price(self):
+        all_books = self.search([])
+        for book in all_books:
+            book.cost_price += 10
+    
+    @api.model
+    def update_book_price(self, category, amount_to_increase):
+        category_books = self.search([('category_id', '=', category.id)])
+        for book in category_books:
+            book.cost_price += amount_to_increase
 
 
 class ResPartner(models.Model):
