@@ -258,6 +258,28 @@ class LibraryBook(models.Model):
         category_books = self.search([('category_id', '=', category.id)])
         for book in category_books:
             book.cost_price += amount_to_increase
+    
+    def book_rent(self):
+        self.ensure_one()
+        if self.state != 'available':
+            raise UserError(_('Book is not available for \
+                renting'))
+    
+    def average_book_occupation(self):
+        sql_query = """
+                    SELECT
+                    lb.name,
+                    avg((EXTRACT(epoch from age(return_date, rent_date)) /
+                    86400))::int
+                    FROM
+                    library_book_rent AS lbr
+                    JOIN
+                    library_book as lb ON lb.id = lbr.book_id
+                    WHERE lbr.state = 'returned'
+                    GROUP BY lb.name;"""
+        self.env.cr.execute(sql_query)
+        result = self.env.cr.fetchall()
+        # logger.info("Average book occupation: %s", result)
 
 
 class ResPartner(models.Model):
@@ -294,3 +316,22 @@ class LibraryBook(models.Model):
     _inherit = 'library.book'
     date_return = fields.Date('Date to return')
     
+
+class LibraryBookRent(models.Model):
+    _name = 'library.book.rent'
+    book_id = fields.Many2one('library.book', 'Book', required=True)
+    borrower_id = fields.Many2one('res.partner', 'Borrower',
+    required=True)
+    state = fields.Selection([('ongoing', 'Ongoing'), ('returned',
+                             'Returned')],
+                             'State', default='ongoing',
+                             required=True)
+    book_id = fields.Many2one('library.book', 'Book', required=True)
+    rent_date = fields.Date(default=fields.Date.today)
+    return_date = fields.Date()
+    rent_as_superuser = self.env['library.book.rent'].sudo()
+    state = fields.Selection([('ongoing', 'Ongoing'),
+                              ('returned', 'Returned'), ('lost',
+                              'Lost')],
+                             'State', default='ongoing',
+                             required=True)

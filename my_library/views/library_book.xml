@@ -25,6 +25,13 @@
                     type="object"/>
                 <button name="change_update_date" string="Update Date" 
                     type="object"/>
+                <button name="book_rent"
+                    string="Rent this book"
+                    type="object"
+                    class="btn-primary"/>
+                <button name="average_book_occupation" 
+                    string="Log Average Occ." 
+                    type="object" />
                 <group>
                     <group>
                         <field name="name"/>
@@ -81,5 +88,13 @@
         </field>
     </record>
 
+    <act_window id="action_wizard_rent_books"
+        name="Give on Rent"
+        res_model="library.rent.wizard"
+        view_mode="form" target="new" />
+    <menuitem id="menu_wizard_rent_books"
+        parent="library_base_menu"
+        action="action_wizard_rent_books"
+        sequence="20" />
 
 </odoo>
